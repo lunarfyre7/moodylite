@@ -1,30 +1,37 @@
 #pragma once
 #include <arduino.h>
+//MoodyLite
+//file: mode.h
+//**
+//Licenced: CC0 2016, author: lunarfyre (Jake Vandereay)
+//Licence details: https://creativecommons.org/publicdomain/zero/1.0/
 
 //color datatype
 struct RGB {
-	RGB (uint8_t,uint8_t,uint8_t); //populate with rgb
+	RGB (uint8_t=0,uint8_t=0,uint8_t=0); //populate with rgb
 	uint8_t r;
 	uint8_t g;
 	uint8_t b;
 };
 
-template<typename T>
-using Callback = void (*)(T&);//callback template
+typedef void (*Callback)(); //define a pointer type for passing callbacks
  
 
 //Mode class, instances of these define the properties of each mode added to the program
 class Mode {
 public:
-	Mode(Callback<Mode>); //if the mode is based on a function, i/e/, for more complecated effects
-	Mode(RGB *); //if the mode is based on a list of colors
+	//           		  VV the 2nd arg is for the pattern, and is optional 
+	Mode(Callback<Mode>, RGB * = nullptr); //if the mode is based on a function, i/e/, for more complecated effects
+	Mode(RGB *, RGB * = nullptr); //if the mode is based on a list of colors
 	Mode(); //Init with no params
 	
-	//public vars meant to be messed with
-	bool isHSY; // Use HSL color transitioning, true by default
+	//public vars meant to be messed with in the config
+	RGB *pattern; // the pattern shown when the mode is first selected
+	bool isHSV; // Use HSL color transitioning, true by default
 	bool useDim; // Apply dimming level, true by default
+	bool random; //cycle randomly, default false;
 	
-	//less public variables that are still public but are less useful for config
+	//less useful for the config area
 	RGB *colorList;
 	//helpers
 	void Call(); //call the callback if there is one

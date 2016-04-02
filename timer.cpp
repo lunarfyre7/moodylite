@@ -1,7 +1,10 @@
 #include "timer.h"
 #include "arduino.h" //used for millis(), should be replace with something else
-
-using namespace cel;
+//MoodyLite
+//file: timer.cpp
+//**
+//Licenced: CC0 2016, author: lunarfyre (Jake Vandereay)
+//Licence details: https://creativecommons.org/publicdomain/zero/1.0/
 
 Timer::Timer()
 	:lastTime(millis())
@@ -44,4 +47,10 @@ bool Timer::First() {
 	bool val = first;
 	first = false;
 	return val;
+}
+float Timer::Progress() {
+	return millis() - lastTime / interval;
+}
+unsigned long Timer::Time() {
+	return millis() - lastTime;
 }
