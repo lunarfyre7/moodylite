@@ -15,7 +15,8 @@
 //and should be easily extensible. It comes with several modes pre coded.
 //Main color effects: HSV fading, color wheel rotations, linear fading, arbitrary functions.
 //
-//I have also tried to heavily comment this code so that hopefully it is more useful to those reading it.
+//I have also tried to heavily comment this code so that hopefully it is more useful to those 
+//reading it (also for people new to C++ hopefully).
 //
 //[write more stuff here later]
 
@@ -73,7 +74,7 @@ namespace CFG {
 
 
 	//add modes to the mode list
-	Mode &modelist[] = {mode1};
+	Mode *modelist[] = {&mode1};
 	
 //**OTHER SETTINGS**//
 	void modeSetup() {
@@ -87,13 +88,14 @@ namespace CFG {
 //**END CONFIG**//
 };
 namespace Moody {
-	RGB oldColor();//if fading from A to B this would be A
-	RGB nextColor();//and this B
-	RGB activeColor();//this would be the current state that is shown and is the point that moves from A to B
+	RGB oldColor;//if fading from A to B this would be A
+	RGB nextColor;//and this B
+	RGB activeColor;//this would be the current state that is shown and is the point that moves from A to B
 	Mode *activeMode = nullptr;
-	Timer animT();//the timer for the main animation function
-	RGB *currentColorList; //the active color list from the active mode
-	uint8_t currentMode; //the current mode index
+	Timer animT;//the timer for the main animation function
+	RGB *activeColorList; //the active color list from the active mode
+	uint8_t currentMode = 0; //the current mode index
+	uint8_t currentColor = 0; //the current colot index (note current here is used for indexes and active is used for pointers)
 	
 	//forward declarations
 	void getNextColor();//get next color forom color list
@@ -105,9 +107,8 @@ namespace Moody {
 	
 	void anim_init() {
 		//setup code for anim here
-		animT.SetInterval(interval);//tell the timer what interval we are using
-		currentMode = 0;//start at 0
-		activeMode = &CFG::modelist[currentMode];//get a pointer to the first mode and make it the active mode
+		animT.SetInterval(CFG::interval);//tell the timer what interval we are using
+		activeMode = CFG::modelist[currentMode];//get a pointer to the first mode and make it the active mode
 		CFG::modeSetup();//run the init function for the modes
 	}
 	void anim_tick() {
@@ -116,13 +117,11 @@ namespace Moody {
 		int diff_g;
 		int diff_b;
 		//check if there is a callback defined and run it if it is
-		if(activeMode->callback != nullptr) {
-			activeMode->call();//ask the Mode to call its callback
-			return; //skip the rest
-		}
+		if(activeMode->call()) //ask the Mode to call its callback
+			return; //skip the rest if the mode returns true indicating that it did indeed call the callback
 		//this handles the default animation
-		if (animT.StaticCheck() < interval) {//animate from color a to b
-			if (activeMode->useHSV) {//do we want to use HSV rotation or linear fading?
+		if (animT.Time() < CFG::interval) {//animate from color a to b
+			if (activeMode->isHSV) {//do we want to use HSV rotation or linear fading?
 				hsvFade();
 			} else {
 				linearFade();
@@ -138,13 +137,13 @@ namespace Moody {
 	void linearFade() {
 		//linear fading mode
 		//get the color differences
-		diff_r = newColor.r - oldColor.r;
-		diff_g = newColor.g - oldColor.g;
-		diff_b = newColor.b - oldColor.b;
+		int diff_r = nextColor.r - oldColor.r;
+		int diff_g = nextColor.g - oldColor.g;
+		int diff_b = nextColor.b - oldColor.b;
 		//Mix the colors according to the current progression of the transition
-		currentColor.r = oldColor.r + diff_r * animT.progress();
-		currentColor.g = oldColor.g + diff_g * animT.progress();
-		currentColor.b = oldColor.b + diff_b * animT.progress();
+		activeColor.r = oldColor.r + diff_r * animT.Progress();
+		activeColor.g = oldColor.g + diff_g * animT.Progress();
+		activeColor.b = oldColor.b + diff_b * animT.Progress();
 
 	}
 	void hsvFade() {
@@ -153,22 +152,22 @@ namespace Moody {
 	
 	//mode list functions
 	void getNextColor() {//get next color forom color list
-		RGB *clist = activeMode->colorlist;//get pointer to the colot list (for cleaner syntax)
+		RGB *clist = activeMode->colorList;//get pointer to the colot list (for cleaner syntax)
 		uint8_t len = sizeof(clist)/sizeof(clist[0]);//length of the color array in C style
 		
 		if (len == 1) //if there is only one color abort
 			return;
 		if (activeMode->random) {//check if the next color should be random or not
-			currentColor = getRand() % (len-1);//get random number, and limit it with modulo length - 1 to keep it in bounds
+			activeColor = getRand() % (len-1);//get random number, and limit it with modulo length - 1 to keep it in bounds
 		} 
 		else //simply go to the next color if random is turned off
-			if (++currentColor <= len) //increment currentColor and check if it is out of bounds
-				currentColor = 0;//reset if it is
+			if (++currentColor <= len) //increment activeColor and check if it is out of bounds
+				activeColor = 0;//reset if it is
 			
 	}
 	int getRand () {
 		//return a random number
-		return analogRead(RANDPIN);//analog pin 'static' method of getting a random number
+		return analogRead(CFG::RANDPIN);//analog pin 'static' method of getting a random number
 		//an alternative is creating a random number based on running time [millis()]
 		//maybe add a LFSR random gen
 	}

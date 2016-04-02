@@ -22,7 +22,7 @@ Mode::Mode() :
 		callback(nullptr),
 		pattern(nullptr)
 {}
-Mode::Mode(Callback<Mode> cb, RGB *pat) : 
+Mode::Mode(Callback cb, RGB *pat) : 
 		Mode()
 {
 	callback = cb;
@@ -33,4 +33,11 @@ Mode::Mode(RGB *list, RGB *pat) :
 {
 	colorList = list;
 	pattern = pat;
+}
+bool Mode::call() {
+	if (callback != nullptr)//is the callback pointer null?
+		(*callback)();//call the callback
+	else
+		return false;//
+	return true;//this only get run if the above else statement is not
 }
