@@ -16,9 +16,16 @@
 //Main color effects: HSV fading, color wheel rotations, linear fading, arbitrary functions.
 //
 //I have also tried to heavily comment this code so that hopefully it is more useful to those 
-//reading it (also for people new to C++ hopefully).
+//reading it (also for people new to C++ hopefully). Most of the things that are relivant to 
+//tweaking should be in this file, but you may want to look at the others for comments on what does what.
 //
 //[write more stuff here later]
+
+///***IMPORTANT***///
+//To make this code compile for attiny85 you need the attiny85 core here https://code.google.com/p/arduino-tiny/
+//Also you need to use ide version 1.6.5 at the latest, newer versions are not compatible with the tiny core
+//One more gotcha, if you use 1.6.5 or older you need to add " -std=gnu++11" (without quotes ofc) to the 
+//"compiler.cpp.flags" line in platforms.txt found BOTH the normal Arduino core /and/ the tiny core you added.
 
 //MoodyLite config
 //
@@ -27,7 +34,7 @@
 //
 namespace CFG {
 //**BOARD CONFIG**//
-	// #define TYPE_ATTINY //uncomment for attiny build target
+	// #define TYPE_ATTINY85 //uncomment for attiny85 build target
 	#define TYPE_UNO //uncomment for uno build target
 	const bool IS_SOURCE = false; //false: current sink, true: current source
 
@@ -42,7 +49,7 @@ namespace CFG {
 		const byte RANDPIN = A0;//analog pin for randomness
 	#endif
 
-	#ifdef TYPE_ATTINY
+	#ifdef TYPE_ATTINY85 //for attiny85
 		//attiny pin config
 		const byte RPIN = 2;//todo, decide on wiring (this is dummy conf atm)
 		const byte GPIN = 3;
@@ -67,10 +74,11 @@ namespace CFG {
 	
 	//mode2 example using a callback
 	
-	void callback1() {
+	void callback2() {
 		//a callback to directly manupulate the colors
-		
 	}
+	RGB pattern2[] = {blue, blue, red};
+	Mode mode2(callback2, pattern2);//passing the function instead of a color list as the 1st arg
 
 
 	//add modes to the mode list
@@ -81,7 +89,9 @@ namespace CFG {
 		//include setup code here that cannot be done outside of a function
 		//this is only here to avoid having super long constructor argument lists
 		
-		
+		//let's set mode one as HSV fading and random
+		mode1.isHSV = true;
+		mode1.random = true;
 	}
 	const unsigned long interval = 5000; //the interval of color change, the time it takes to fade from one color to the next
 	
@@ -144,7 +154,6 @@ namespace Moody {
 		activeColor.r = oldColor.r + diff_r * animT.Progress();
 		activeColor.g = oldColor.g + diff_g * animT.Progress();
 		activeColor.b = oldColor.b + diff_b * animT.Progress();
-
 	}
 	void hsvFade() {
 		//fades by rotating the hue and adjusting saturation and lightness to transition
@@ -163,7 +172,6 @@ namespace Moody {
 		else //simply go to the next color if random is turned off
 			if (++currentColor <= len) //increment activeColor and check if it is out of bounds
 				activeColor = 0;//reset if it is
-			
 	}
 	int getRand () {
 		//return a random number
@@ -176,7 +184,6 @@ namespace Moody {
 
 void setup() {
 	Moody::anim_init();
-	
 }
 
 void loop() {

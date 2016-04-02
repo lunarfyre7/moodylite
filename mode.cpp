@@ -35,7 +35,7 @@ Mode::Mode(RGB *list, RGB *pat) :
 	pattern = pat;
 }
 bool Mode::call() {
-	if (callback != nullptr)//is the callback pointer null?
+	if (callback)//is the callback pointer null?
 		(*callback)();//call the callback
 	else
 		return false;//
