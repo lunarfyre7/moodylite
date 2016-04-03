@@ -17,8 +17,9 @@ typedef void (*Callback)(); //define a pointer type for passing callbacks
 class Mode {
 public:
 	//           		  VV the 2nd arg is for the pattern, and is optional 
-	Mode(Callback, const RGB * = nullptr); //if the mode is based on a function, i/e/, for more complecated effects
-	Mode(const RGB *, const RGB * = nullptr); //if the mode is based on a list of colors
+	//                    VV                                   VV you must also pass the length of the list
+	Mode(Callback, const RGB patternlist[] = nullptr, uint8_t =0); //if the mode is based on a function, i/e/, for more complecated effects
+	Mode(const RGB colorlist[], uint8_t clistLen, const RGB patternlist[] = nullptr, uint8_t plistLen=0); //if the mode is based on a list of colors
 	Mode(); //Init with no params
 	
 	//public vars meant to be messed with in the config
@@ -29,6 +30,8 @@ public:
 	
 	//less useful for the config area
 	const RGB *colorList;
+	uint8_t cLen;//length of color array
+	uint8_t pLen;//length of pattern array
 	//helpers
 	bool call(); //call the callback if there is one, returns true if there is a callback.
 private:

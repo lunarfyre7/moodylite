@@ -22,7 +22,6 @@
 //reading it (also for people new to C++ hopefully). Most of the things that are relevant to 
 //tweaking should be in this file, but you may want to look at the others for comments on what does what.
 //
-//[write more stuff here later]
 
 ///***IMPORTANT READ THIS!!!***///
 //To make this code compile for attiny85 you need the attiny85 core here https://code.google.com/p/arduino-tiny/
@@ -66,14 +65,18 @@ namespace CFG {
 	const RGB red= {255,0,0};
 	const RGB green = {0,255,0};
 	const RGB blue = {0,0,255};
+	const RGB purple = {255,0,255};
+	const RGB cyan = {0,255,255};
+	const RGB yellow = {255,255,0};
 	//add more here later
 
 //**MODE CONFIG**//
 	//pin stuff here later
 	//mode 1 (just something to fill space atm)
-	const RGB colors1[] = {red,green,blue};//the colors to be cycled through go here
-	const RGB pattern1[] = {blue, blue, green};//the pattern played when this mode is selected is set here
-	Mode mode1(colors1, pattern1);//create an instance of Mode for this mode
+	// const RGB colors1[] = {red, yellow, green, cyan, blue, purple};//the colors to be cycled through go here
+	const RGB colors1[] = {red, green, blue};
+	// const RGB pattern1[] = {red, green, blue};//the pattern played when this mode is selected is set here
+	Mode mode1(colors1, 3);//create an instance of Mode for this mode
 	
 	//mode2 example using a callback
 	
@@ -92,11 +95,12 @@ namespace CFG {
 		//include setup code here that cannot be done outside of a function
 		//this is only here to avoid having super long constructor argument lists
 		
-		//let's set mode one as HSV fading and random
+		
 		mode1.isHSV = false;
-		// mode1.random = true;
+		mode1.random = false;
 	}
-	const unsigned long interval = 5000; //the interval of color change, the time it takes to fade from one color to the next
+	// const unsigned long interval = 5000; //the interval of color change, the time it takes to fade from one color to the next
+	const unsigned long interval = 750;//fast for testing
 	
 //**END CONFIG**//
 };
@@ -177,19 +181,23 @@ namespace Moody {
 	//mode list functions
 	RGB getNextColor() {//get next color from color list
 		const RGB *clist = activeMode->colorList;//get pointer to the color list (for cleaner syntax)
-		uint8_t len = sizeof(clist)/sizeof(clist[0]);//length of the color array in C style
+		//uint8_t len = sizeof(*clist)/sizeof(RGB*);//length of the color array in C style
+		uint8_t len = activeMode->cLen;
+		PRINT2("clist len", len);
 		activeColorList = clist;//update activeColorList (this may be unneeded)
 		
 		if (len == 1) //if there is only one color abort
-			return clist[0];
+			return *(clist);
 		if (activeMode->random) {//check if the next color should be random or not
-			return clist[getRand() % (len-1)];//get random number, and limit it with modulo length - 1 to keep it in bounds
+			return *(clist + (getRand() % (len-1)));//get random number, and limit it with modulo length - 1 to keep it in bounds
 		} 
 		else //simply go to the next color if random is turned off
-			if (++currentColor <= len) //increment the color index and check if it is out of bounds
-				return clist[0];//reset if it is
+			if (++currentColor >= len) {//increment the color index and check if it is out of bounds
+				currentColor = 0;//reset if it is 
+				return *(clist);//same as index 0
+			}
 			else
-				return clist[currentColor];//return the next color if all is okay
+				return *(clist + currentColor);//return the next color if all is okay (using pointer arithmatic instead of normal index syntax)
 	}
 	int getRand () {
 		//return a random number

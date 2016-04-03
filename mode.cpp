@@ -16,17 +16,20 @@ Mode::Mode() :
 		callback(nullptr),
 		pattern(nullptr)
 {}
-Mode::Mode(Callback cb, const RGB *pat) : 
+Mode::Mode(Callback cb, const RGB pat[], uint8_t plistLen) : 
 		Mode()
 {
 	callback = cb;
 	pattern = pat;
+	pLen = plistLen;
 }
-Mode::Mode(const RGB *list, const RGB *pat) :
+Mode::Mode(const RGB list[], uint8_t clistLen, const RGB pat[], uint8_t plistLen) :
 		Mode()
 {
 	colorList = list;
 	pattern = pat;
+	pLen = plistLen;
+	cLen = clistLen;
 }
 bool Mode::call() {
 	if (callback)//is the callback pointer null?
