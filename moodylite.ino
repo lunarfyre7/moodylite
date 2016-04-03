@@ -9,17 +9,17 @@
 //MoodyLite
 //file: moodylite.ino
 //**
-//Licenced: CC0 2016, author: lunarfyre (Jake Vandereay)
-//Licence details: https://creativecommons.org/publicdomain/zero/1.0/
+//Licensed: CC0 2016, author: lunarfyre (Jake Vandereay)
+//License details: https://creativecommons.org/publicdomain/zero/1.0/
 //Functions and algorithms sourced from elsewhere are implied to be public domain, however credit is still
-//given in the relivent files, the CC0 licenced is not meant to be applied to those.
+//given in the relevant files, the CC0 licensed is not meant to be applied to those.
 //**
 //MoodyLite is a moodlight program for Arduino that is somewhat modular in it's configuration
 //and should be easily extensible. It comes with several modes pre coded.
 //Main color effects: HSV fading, color wheel rotations, linear fading, arbitrary functions.
 //
 //I have also tried to heavily comment this code so that hopefully it is more useful to those 
-//reading it (also for people new to C++ hopefully). Most of the things that are relivant to 
+//reading it (also for people new to C++ hopefully). Most of the things that are relevant to 
 //tweaking should be in this file, but you may want to look at the others for comments on what does what.
 //
 //[write more stuff here later]
@@ -78,7 +78,7 @@ namespace CFG {
 	//mode2 example using a callback
 	
 	void callback2() {
-		//a callback to directly manupulate the colors
+		//a callback to directly manipulate the colors
 	}
 	RGB pattern2[] = {blue, blue, red};
 	Mode mode2(callback2, pattern2);//passing the function instead of a color list as the 1st arg
@@ -111,7 +111,7 @@ namespace Moody {
 	uint8_t currentColor = 0; //the current colot index (note current here is used for indexes and active is used for pointers)
 	
 	//forward declarations
-	RGB getNextColor();//get next color forom color list
+	RGB getNextColor();//get next color from color list
 	void setOutputColor(RGB);//set the argument color as the pwn output to the actual lights
 	void linearFade();
 	void hsvFade();
@@ -145,7 +145,7 @@ namespace Moody {
 		else{
 			oldColor = nextColor; //save the old color
 			nextColor = getNextColor();//update activeColor
-			activeColor = oldColor; // set the avtive color as the old color
+			activeColor = oldColor; // set the active color as the old color
 			PRINTLN("new color");
 			PRINT2("r", nextColor.r);
 			PRINT2("g", nextColor.g);
@@ -175,8 +175,8 @@ namespace Moody {
 	}
 	
 	//mode list functions
-	RGB getNextColor() {//get next color forom color list
-		const RGB *clist = activeMode->colorList;//get pointer to the colot list (for cleaner syntax)
+	RGB getNextColor() {//get next color from color list
+		const RGB *clist = activeMode->colorList;//get pointer to the color list (for cleaner syntax)
 		uint8_t len = sizeof(clist)/sizeof(clist[0]);//length of the color array in C style
 		activeColorList = clist;//update activeColorList (this may be unneeded)
 		
@@ -215,7 +215,7 @@ void setup() {
 	pinMode(CFG::RPIN, OUTPUT);
 	pinMode(CFG::GPIN, OUTPUT);
 	pinMode(CFG::BPIN, OUTPUT);
-	//set pins as eith high or low depending of wether or not they are sourcing current
+	//set pins as with high or low depending of whether or not they are sourcing current
 	digitalWrite(CFG::RPIN, CFG::MODE);
 	digitalWrite(CFG::GPIN, CFG::MODE);
 	digitalWrite(CFG::BPIN, CFG::MODE);

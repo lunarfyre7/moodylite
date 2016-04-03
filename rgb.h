@@ -3,8 +3,8 @@
 //MoodyLite
 //file: rgb.h
 //**
-//Licenced: CC0 2016, author: lunarfyre (Jake Vandereay)
-//Licence details: https://creativecommons.org/publicdomain/zero/1.0/
+//Licensed: CC0 2016, author: lunarfyre (Jake Vandereay)
+//License details: https://creativecommons.org/publicdomain/zero/1.0/
 
 //Defines RGB and HSV classes with member function to convern between the two.
 //Serves as a wrapper for hsv.h and as a data type.

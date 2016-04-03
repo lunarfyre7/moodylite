@@ -3,8 +3,8 @@
 //MoodyLite
 //file: timer.cpp
 //**
-//Licenced: CC0 2016, author: lunarfyre (Jake Vandereay)
-//Licence details: https://creativecommons.org/publicdomain/zero/1.0/
+//Licensed: CC0 2016, author: lunarfyre (Jake Vandereay)
+//License details: https://creativecommons.org/publicdomain/zero/1.0/
 
 Timer::Timer()
 	:lastTime(millis())
