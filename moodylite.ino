@@ -73,10 +73,9 @@ namespace CFG {
 //**MODE CONFIG**//
 	//pin stuff here later
 	//mode 1 (just something to fill space atm)
-	// const RGB colors1[] = {red, yellow, green, cyan, blue, purple};//the colors to be cycled through go here
-	const RGB colors1[] = {red, green, blue};
+	const RGB colors1[] = {red, yellow, green, cyan, blue, purple};//the colors to be cycled through go here
 	// const RGB pattern1[] = {red, green, blue};//the pattern played when this mode is selected is set here
-	Mode mode1(colors1, 3);//create an instance of Mode for this mode
+	Mode mode1(colors1, 6);//create an instance of Mode for this mode
 	
 	//mode2 example using a callback
 	
@@ -97,7 +96,7 @@ namespace CFG {
 		
 		
 		mode1.isHSV = false;
-		mode1.random = false;
+		mode1.random = true;
 	}
 	// const unsigned long interval = 5000; //the interval of color change, the time it takes to fade from one color to the next
 	const unsigned long interval = 750;//fast for testing
@@ -189,7 +188,12 @@ namespace Moody {
 		if (len == 1) //if there is only one color abort
 			return *(clist);
 		if (activeMode->random) {//check if the next color should be random or not
-			return *(clist + (getRand() % (len-1)));//get random number, and limit it with modulo length - 1 to keep it in bounds
+			uint8_t rand = getRand() % (len-1);//get random number, and limit it with modulo length - 1 to keep it in bounds
+			if (rand == currentColor) //don't show the same color multiple times in a row
+				currentColor = (currentColor + 1) % (len-1);//the same limiting as above
+			else
+				currentColor = rand;
+			return *(clist + currentColor);
 		} 
 		else //simply go to the next color if random is turned off
 			if (++currentColor >= len) {//increment the color index and check if it is out of bounds
@@ -201,7 +205,8 @@ namespace Moody {
 	}
 	int getRand () {
 		//return a random number
-		return analogRead(CFG::RANDPIN);//analog pin 'static' method of getting a random number
+		// return analogRead(CFG::RANDPIN);//analog pin 'static' method of getting a random number
+		return random(1024);
 	}
 	void setOutputColor(RGB color) {
 		//set the input color as the pwm output color
@@ -223,11 +228,15 @@ void setup() {
 	pinMode(CFG::RPIN, OUTPUT);
 	pinMode(CFG::GPIN, OUTPUT);
 	pinMode(CFG::BPIN, OUTPUT);
+	//setup the button pins with internal pullup enables to make wiring slightly easier
+	pinMode(CFG::BTN1, INPUT_PULLUP);
+	pinMode(CFG::BTN2, INPUT_PULLUP);
 	//set pins as with high or low depending of whether or not they are sourcing current
 	digitalWrite(CFG::RPIN, CFG::MODE);
 	digitalWrite(CFG::GPIN, CFG::MODE);
 	digitalWrite(CFG::BPIN, CFG::MODE);
 	//init other stuff
+	randomSeed(CFG::RANDPIN);//setup randomness
 	Moody::anim_init();
 	//setup serial if we need to do debugging printing
 	#ifdef DEBUGGING
