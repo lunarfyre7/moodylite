@@ -84,10 +84,14 @@ namespace CFG {
 	}
 	RGB pattern2[] = {blue, blue, red};
 	Mode mode2(callback2, pattern2);//passing the function instead of a color list as the 1st arg
+	
+	//pink color scheme
+	const RGB pink_colors[] = {red, purple, RGB(255, 0, 170), RGB(153, 0, 255)};
+	Mode pink(pink_colors, 5);
 
 
 	//add modes to the mode list
-	Mode *modelist[] = {&mode1};
+	Mode *modelist[] = {&mode1, &pink};
 	
 //**OTHER SETTINGS**//
 	void modeSetup() {
@@ -97,6 +101,8 @@ namespace CFG {
 		
 		mode1.isHSV = false;
 		mode1.random = true;
+		pink.isHSV = false;
+		pink.random = true;
 	}
 	// const unsigned long interval = 5000; //the interval of color change, the time it takes to fade from one color to the next
 	const unsigned long interval = 750;//fast for testing
@@ -112,9 +118,11 @@ namespace Moody {
 	const RGB *activeColorList = nullptr; //the active color list from the active mode
 	uint8_t currentMode = 0; //the current mode index
 	uint8_t currentColor = 0; //the current colot index (note current here is used for indexes and active is used for pointers)
-	
+	bool buttons[2], buttonsOld[2] = {false, false};//the current and prev button states
+
 	//forward declarations
 	RGB getNextColor();//get next color from color list
+	void nextMode();//switch to the next mode
 	void setOutputColor(RGB);//set the argument color as the pwn output to the actual lights
 	void linearFade();
 	void hsvFade();
@@ -220,7 +228,32 @@ namespace Moody {
 		analogWrite(CFG::GPIN, color.g);
 		analogWrite(CFG::BPIN, color.b);
 	}
-
+	Timer btnTimer;//used for debouncing
+	void btn_tick() {//handles button input
+		if(!btnTimer.Every(20))//only run every 20ms
+			return;
+		//get states from pins
+		buttons[0] = !digitalRead(CFG::BTN1);//invert so that high is false and low is true
+		buttons[1] = !digitalRead(CFG::BTN2);
+		//button logic
+		//TODO add overriding logic here for callbacks 
+		if (buttons[0] > buttonsOld[0]) {//if button 1 has gone from up to down
+			nextMode();
+		} 
+		if (buttons[1] > buttonsOld[1]) {//if button 2 has gone from up to down
+			//add dimming here
+		} 
+		//update old states
+		buttonsOld[0] = buttons[0];
+		buttonsOld[1] = buttons[1];
+	}
+	void nextMode() {
+		uint8_t len = sizeof(CFG::modelist)/sizeof(Mode*);//get length
+		if (++currentMode == len) //check for out of bounds and reset if needed
+			currentMode = 0;
+		activeMode = CFG::modelist[currentMode];//set activeMode to the next mode in the list
+		//animT.Reset();//make the animation start over
+	}
 }
 
 void setup() {
@@ -247,4 +280,5 @@ void setup() {
 
 void loop() {
 	Moody::anim_tick();
+	Moody::btn_tick();
 }
