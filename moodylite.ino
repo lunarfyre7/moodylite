@@ -1,7 +1,10 @@
 #include "timer.h"
 #include "mode.h"
-#include "hsv.h"
 #include "wheel.h"
+// #include <avr/pgmspace.h>
+
+// #define DEBUGGING //uncomment for PRINT() lines to take effect, comment to save space
+#include "debug.h"
 
 //MoodyLite
 //file: moodylite.ino
@@ -21,7 +24,7 @@
 //
 //[write more stuff here later]
 
-///***IMPORTANT***///
+///***IMPORTANT READ THIS!!!***///
 //To make this code compile for attiny85 you need the attiny85 core here https://code.google.com/p/arduino-tiny/
 //Also you need to use ide version 1.6.5 at the latest, newer versions are not compatible with the tiny core
 //One more gotcha, if you use 1.6.5 or older you need to add " -std=gnu++11" (without quotes ofc) to the 
@@ -36,15 +39,15 @@ namespace CFG {
 //**BOARD CONFIG**//
 	// #define TYPE_ATTINY85 //uncomment for attiny85 build target
 	#define TYPE_UNO //uncomment for uno build target
-	const bool IS_SOURCE = false; //false: current sink, true: current source
+	const bool MODE = LOW; //LOW: current sink, HIGH: current source
 
 
 	#ifdef TYPE_UNO
 		//uno pin config
-		const byte RPIN = 3;
+		const byte RPIN = 3;//red pin, etc...
 		const byte GPIN = 5;
 		const byte BPIN = 6;
-		const byte BTN1 = 8;
+		const byte BTN1 = 8;//button 1, etc...
 		const byte BTN2 = 9;
 		const byte RANDPIN = A0;//analog pin for randomness
 	#endif
@@ -60,7 +63,7 @@ namespace CFG {
 
 //**COLORS**//
 	const RGB white = {255,255,255};
-	const RGB red = {255,0,0};
+	const RGB red= {255,0,0};
 	const RGB green = {0,255,0};
 	const RGB blue = {0,0,255};
 	//add more here later
@@ -68,8 +71,8 @@ namespace CFG {
 //**MODE CONFIG**//
 	//pin stuff here later
 	//mode 1 (just something to fill space atm)
-	RGB colors1[] = {red,green,blue,white, RGB(0,150,100)};//the colors to be cycled through go here
-	RGB pattern1[] = {blue, blue, green};//the pattern played when this mode is selected is set here
+	const RGB colors1[] = {red,green,blue};//the colors to be cycled through go here
+	const RGB pattern1[] = {blue, blue, green};//the pattern played when this mode is selected is set here
 	Mode mode1(colors1, pattern1);//create an instance of Mode for this mode
 	
 	//mode2 example using a callback
@@ -90,25 +93,25 @@ namespace CFG {
 		//this is only here to avoid having super long constructor argument lists
 		
 		//let's set mode one as HSV fading and random
-		mode1.isHSV = true;
-		mode1.random = true;
+		mode1.isHSV = false;
+		// mode1.random = true;
 	}
 	const unsigned long interval = 5000; //the interval of color change, the time it takes to fade from one color to the next
 	
 //**END CONFIG**//
 };
 namespace Moody {
-	RGB oldColor;//if fading from A to B this would be A
+	RGB oldColor = RGB(0,0,0);//if fading from A to B this would be A (inited to black)
 	RGB nextColor;//and this B
 	RGB activeColor;//this would be the current state that is shown and is the point that moves from A to B
-	Mode *activeMode = nullptr;
+	Mode *activeMode = nullptr;//pointer to the active mode (inited to null for safety)
 	Timer animT;//the timer for the main animation function
-	RGB *activeColorList; //the active color list from the active mode
+	const RGB *activeColorList = nullptr; //the active color list from the active mode
 	uint8_t currentMode = 0; //the current mode index
 	uint8_t currentColor = 0; //the current colot index (note current here is used for indexes and active is used for pointers)
 	
 	//forward declarations
-	void getNextColor();//get next color forom color list
+	RGB getNextColor();//get next color forom color list
 	void setOutputColor(RGB);//set the argument color as the pwn output to the actual lights
 	void linearFade();
 	void hsvFade();
@@ -116,8 +119,10 @@ namespace Moody {
 
 	
 	void anim_init() {
+		PRINTLN("anim init");
 		//setup code for anim here
 		animT.SetInterval(CFG::interval);//tell the timer what interval we are using
+		// animT.Reset();
 		activeMode = CFG::modelist[currentMode];//get a pointer to the first mode and make it the active mode
 		CFG::modeSetup();//run the init function for the modes
 	}
@@ -137,11 +142,18 @@ namespace Moody {
 				linearFade();
 			}
 		}
-		else {
+		else{
 			oldColor = nextColor; //save the old color
-			//nextColor = //USE A THING TO GET nextColor HERE
+			nextColor = getNextColor();//update activeColor
+			activeColor = oldColor; // set the avtive color as the old color
+			PRINTLN("new color");
+			PRINT2("r", nextColor.r);
+			PRINT2("g", nextColor.g);
+			PRINT2("b", nextColor.b);
 			animT.Reset();//reset the timer
 		}
+		//set corrent color as the output
+		setOutputColor(activeColor);
 	}
 	
 	void linearFade() {
@@ -154,36 +166,66 @@ namespace Moody {
 		activeColor.r = oldColor.r + diff_r * animT.Progress();
 		activeColor.g = oldColor.g + diff_g * animT.Progress();
 		activeColor.b = oldColor.b + diff_b * animT.Progress();
+		PRINTLN("progress -- time");
+		PRINTLN(animT.Progress());
+		PRINTLN(animT.Time());
 	}
 	void hsvFade() {
 		//fades by rotating the hue and adjusting saturation and lightness to transition
 	}
 	
 	//mode list functions
-	void getNextColor() {//get next color forom color list
-		RGB *clist = activeMode->colorList;//get pointer to the colot list (for cleaner syntax)
+	RGB getNextColor() {//get next color forom color list
+		const RGB *clist = activeMode->colorList;//get pointer to the colot list (for cleaner syntax)
 		uint8_t len = sizeof(clist)/sizeof(clist[0]);//length of the color array in C style
+		activeColorList = clist;//update activeColorList (this may be unneeded)
 		
 		if (len == 1) //if there is only one color abort
-			return;
+			return clist[0];
 		if (activeMode->random) {//check if the next color should be random or not
-			activeColor = getRand() % (len-1);//get random number, and limit it with modulo length - 1 to keep it in bounds
+			return clist[getRand() % (len-1)];//get random number, and limit it with modulo length - 1 to keep it in bounds
 		} 
 		else //simply go to the next color if random is turned off
-			if (++currentColor <= len) //increment activeColor and check if it is out of bounds
-				activeColor = 0;//reset if it is
+			if (++currentColor <= len) //increment the color index and check if it is out of bounds
+				return clist[0];//reset if it is
+			else
+				return clist[currentColor];//return the next color if all is okay
 	}
 	int getRand () {
 		//return a random number
 		return analogRead(CFG::RANDPIN);//analog pin 'static' method of getting a random number
-		//an alternative is creating a random number based on running time [millis()]
-		//maybe add a LFSR random gen
+	}
+	void setOutputColor(RGB color) {
+		//set the input color as the pwm output color
+		if (CFG::MODE == LOW) {//if the outputs and sinking current we need to invert the values
+			color.r = 255 - color.r;
+			color.g = 255 - color.g;
+			color.b = 255 - color.b;
+		}
+		//set the pins to the correct values...
+		analogWrite(CFG::RPIN, color.r);
+		analogWrite(CFG::GPIN, color.g);
+		analogWrite(CFG::BPIN, color.b);
 	}
 
 }
 
 void setup() {
+	//setup pins
+	pinMode(CFG::RPIN, OUTPUT);
+	pinMode(CFG::GPIN, OUTPUT);
+	pinMode(CFG::BPIN, OUTPUT);
+	//set pins as eith high or low depending of wether or not they are sourcing current
+	digitalWrite(CFG::RPIN, CFG::MODE);
+	digitalWrite(CFG::GPIN, CFG::MODE);
+	digitalWrite(CFG::BPIN, CFG::MODE);
+	//init other stuff
 	Moody::anim_init();
+	//setup serial if we need to do debugging printing
+	#ifdef DEBUGGING
+	Serial.begin(9600);
+	PRINTLN("debugging on");
+	#endif
 }
 
 void loop() {

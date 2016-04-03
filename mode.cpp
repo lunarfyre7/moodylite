@@ -5,12 +5,6 @@
 //Licenced: CC0 2016, author: lunarfyre (Jake Vandereay)
 //Licence details: https://creativecommons.org/publicdomain/zero/1.0/
 
-//basic rgb data constructor
-RGB::RGB(uint8_t r, uint8_t g, uint8_t b) :
-		r(r),
-		g(g),
-		b(b)
-{}
  
 //Mode constructors
 Mode::Mode() :
@@ -22,13 +16,13 @@ Mode::Mode() :
 		callback(nullptr),
 		pattern(nullptr)
 {}
-Mode::Mode(Callback cb, RGB *pat) : 
+Mode::Mode(Callback cb, const RGB *pat) : 
 		Mode()
 {
 	callback = cb;
 	pattern = pat;
 }
-Mode::Mode(RGB *list, RGB *pat) :
+Mode::Mode(const RGB *list, const RGB *pat) :
 		Mode()
 {
 	colorList = list;

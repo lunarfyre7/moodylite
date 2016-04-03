@@ -1,5 +1,5 @@
 // hsv color code snagged from here: http://stackoverflow.com/a/6930407
-namespace HSV {
+namespace HSVlib {
 	typedef struct {
 		double r;       // percent
 		double g;       // percent

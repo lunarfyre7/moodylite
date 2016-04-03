@@ -49,7 +49,7 @@ bool Timer::First() {
 	return val;
 }
 float Timer::Progress() {
-	return millis() - lastTime / interval;
+	return (float)Time() / (float)interval;
 }
 unsigned long Timer::Time() {
 	return millis() - lastTime;
